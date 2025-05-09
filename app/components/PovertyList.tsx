@@ -268,26 +268,6 @@ export default function PovertyList() {
                               Set Pending
                             </button>
                           )}
-                          {person.supportStatus !== "receiving" && (
-                            <button
-                              onClick={() =>
-                                handleStatusChange(person.id, "receiving")
-                              }
-                              className="text-green-600 hover:text-green-800"
-                            >
-                              Set Receiving
-                            </button>
-                          )}
-                          {person.supportStatus !== "completed" && (
-                            <button
-                              onClick={() =>
-                                handleStatusChange(person.id, "completed")
-                              }
-                              className="text-gray-600 hover:text-gray-800"
-                            >
-                              Set Completed
-                            </button>
-                          )}
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -411,26 +391,6 @@ export default function PovertyList() {
                         className="text-yellow-600 hover:text-yellow-800 text-sm"
                       >
                         Set Pending
-                      </button>
-                    )}
-                    {person.supportStatus !== "receiving" && (
-                      <button
-                        onClick={() =>
-                          handleStatusChange(person.id, "receiving")
-                        }
-                        className="text-green-600 hover:text-green-800 text-sm"
-                      >
-                        Set Receiving
-                      </button>
-                    )}
-                    {person.supportStatus !== "completed" && (
-                      <button
-                        onClick={() =>
-                          handleStatusChange(person.id, "completed")
-                        }
-                        className="text-gray-600 hover:text-gray-800 text-sm"
-                      >
-                        Set Completed
                       </button>
                     )}
                   </div>

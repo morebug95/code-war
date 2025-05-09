@@ -1,9 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   experimental: {
-    serverActions: {},
+    serverActions: true,
   },
   typescript: {
     // Ignore TypeScript errors during build to allow us to continue

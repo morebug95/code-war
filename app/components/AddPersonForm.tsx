@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Person } from "../types";
+import { Person, Milestone } from "../types";
 import { useAppDispatch } from "../redux/hooks";
 import { addPerson } from "../redux/peopleSlice";
+import { nanoid } from "@reduxjs/toolkit";
 
 type AddPersonFormProps = {
   onCancel: () => void;
@@ -28,6 +29,17 @@ export default function AddPersonForm({ onCancel }: AddPersonFormProps) {
     disabilityStatus: false,
     supportStatus: "pending" as const,
     supportNeeds: [] as string[],
+    fundraisingGoal: "5000",
+    campaignTitle: "",
+    campaignDescription: "",
+    milestones: [
+      {
+        id: nanoid(),
+        title: "",
+        description: "",
+        amount: "1000",
+      },
+    ],
   });
 
   const handleChange = (
@@ -69,6 +81,48 @@ export default function AddPersonForm({ onCancel }: AddPersonFormProps) {
     });
   };
 
+  const handleMilestoneChange = (
+    index: number,
+    field: string,
+    value: string
+  ) => {
+    const updatedMilestones = [...formData.milestones];
+    updatedMilestones[index] = {
+      ...updatedMilestones[index],
+      [field]: value,
+    };
+    setFormData((prev) => ({
+      ...prev,
+      milestones: updatedMilestones,
+    }));
+  };
+
+  const addMilestone = () => {
+    setFormData((prev) => ({
+      ...prev,
+      milestones: [
+        ...prev.milestones,
+        {
+          id: nanoid(),
+          title: "",
+          description: "",
+          amount: "1000",
+        },
+      ],
+    }));
+  };
+
+  const removeMilestone = (index: number) => {
+    if (formData.milestones.length > 1) {
+      const updatedMilestones = [...formData.milestones];
+      updatedMilestones.splice(index, 1);
+      setFormData((prev) => ({
+        ...prev,
+        milestones: updatedMilestones,
+      }));
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -89,6 +143,19 @@ export default function AddPersonForm({ onCancel }: AddPersonFormProps) {
       disabilityStatus: formData.disabilityStatus,
       supportStatus: formData.supportStatus,
       supportNeeds: formData.supportNeeds,
+      fundraisingGoal: parseInt(formData.fundraisingGoal),
+      campaignTitle: formData.campaignTitle || `Support for ${formData.name}`,
+      campaignDescription:
+        formData.campaignDescription ||
+        `Help support ${formData.name} with their needs`,
+      currentFunds: 0,
+      fundraisingMilestones: formData.milestones.map((m) => ({
+        id: m.id,
+        title: m.title,
+        description: m.description,
+        amount: parseInt(m.amount),
+        isReached: false,
+      })),
     };
 
     dispatch(addPerson(newPerson));
@@ -532,6 +599,201 @@ export default function AddPersonForm({ onCancel }: AddPersonFormProps) {
               <option value="receiving">Receiving</option>
               <option value="completed">Completed</option>
             </select>
+          </div>
+
+          {/* Fundraising Information */}
+          <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
+            <h3 className="text-lg font-medium mb-4">
+              Fundraising Information
+            </h3>
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <label
+                  className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                  htmlFor="fundraisingGoal"
+                >
+                  Fundraising Goal ($)
+                </label>
+                <input
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  id="fundraisingGoal"
+                  type="number"
+                  name="fundraisingGoal"
+                  value={formData.fundraisingGoal}
+                  onChange={handleChange}
+                  min="100"
+                  placeholder="5000"
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                  htmlFor="campaignTitle"
+                >
+                  Campaign Title
+                </label>
+                <input
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  id="campaignTitle"
+                  type="text"
+                  name="campaignTitle"
+                  value={formData.campaignTitle}
+                  onChange={handleChange}
+                  placeholder="Support for John's Family"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  If left blank, a default title will be created
+                </p>
+              </div>
+
+              <div>
+                <label
+                  className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                  htmlFor="campaignDescription"
+                >
+                  Campaign Description
+                </label>
+                <textarea
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  id="campaignDescription"
+                  name="campaignDescription"
+                  value={formData.campaignDescription}
+                  onChange={handleChange}
+                  rows={3}
+                  placeholder="Help John secure stable housing and education for his children"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  If left blank, a default description will be created
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Fundraising Milestones */}
+          <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">Fundraising Milestones</h3>
+              <button
+                type="button"
+                onClick={addMilestone}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-sm flex items-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 mr-1"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                Add Milestone
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {formData.milestones.map((milestone, index) => (
+                <div
+                  key={milestone.id}
+                  className="border border-gray-200 dark:border-gray-700 p-4 rounded-md"
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="font-medium">Milestone {index + 1}</h4>
+                    {formData.milestones.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeMilestone(index)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label
+                        className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                        htmlFor={`milestone-amount-${index}`}
+                      >
+                        Amount ($)
+                      </label>
+                      <input
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        id={`milestone-amount-${index}`}
+                        type="number"
+                        value={milestone.amount}
+                        onChange={(e) =>
+                          handleMilestoneChange(index, "amount", e.target.value)
+                        }
+                        min="100"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                        htmlFor={`milestone-title-${index}`}
+                      >
+                        Title
+                      </label>
+                      <input
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        id={`milestone-title-${index}`}
+                        type="text"
+                        value={milestone.title}
+                        onChange={(e) =>
+                          handleMilestoneChange(index, "title", e.target.value)
+                        }
+                        placeholder="Emergency Fund"
+                        required
+                      />
+                    </div>
+
+                    <div className="md:col-span-3">
+                      <label
+                        className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+                        htmlFor={`milestone-description-${index}`}
+                      >
+                        Description
+                      </label>
+                      <textarea
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        id={`milestone-description-${index}`}
+                        value={milestone.description}
+                        onChange={(e) =>
+                          handleMilestoneChange(
+                            index,
+                            "description",
+                            e.target.value
+                          )
+                        }
+                        rows={2}
+                        placeholder="Create an emergency fund for immediate needs"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="flex items-center justify-end gap-2 sticky bottom-0 bg-white dark:bg-gray-800 py-3">

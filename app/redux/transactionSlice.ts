@@ -11,6 +11,7 @@ export type Transaction = {
   amount: number;
   status: "pending" | "confirmed" | "failed";
   description: string;
+  targetMilestone?: string;
   verificationProof?: {
     verifiedBy?: string;
     verificationTime?: number;
@@ -86,9 +87,11 @@ export const transactionSlice = createSlice({
         recipient: string;
         amount: number;
         description: string;
+        targetMilestone?: string;
       }>
     ) => {
-      const { sender, recipient, amount, description } = action.payload;
+      const { sender, recipient, amount, description, targetMilestone } =
+        action.payload;
 
       // Create a new transaction
       const newTransaction: Transaction = {
@@ -100,6 +103,7 @@ export const transactionSlice = createSlice({
         amount,
         status: "pending",
         description,
+        targetMilestone,
       };
 
       // Add to pending transactions

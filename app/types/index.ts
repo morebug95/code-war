@@ -27,4 +27,18 @@ export type Person = {
   disabilityStatus: boolean;
   supportStatus: "pending" | "receiving" | "completed";
   supportNeeds: string[];
+  fundraisingGoal: number;
+  fundraisingMilestones: Milestone[];
+  currentFunds: number;
+  campaignTitle?: string;
+  campaignDescription?: string;
+};
+
+export type Milestone = {
+  id: string;
+  amount: number;
+  title: string;
+  description: string;
+  isReached: boolean;
+  reachedAt?: number;
 };
