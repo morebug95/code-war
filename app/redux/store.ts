@@ -3,6 +3,7 @@ import peopleReducer from "./peopleSlice";
 import transactionReducer from "./transactionSlice";
 import userReducer from "./userSlice";
 import authReducer from "./authSlice";
+import subscriptionReducer from "./subscriptionSlice";
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     transactions: transactionReducer,
     user: userReducer,
     auth: authReducer,
+    subscriptions: subscriptionReducer,
   },
 });
 

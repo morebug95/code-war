@@ -66,6 +66,16 @@ export default function Navigation() {
               >
                 Blockchain
               </Link>
+              <Link
+                href="/subscriptions"
+                className={`px-3 py-2 rounded-md text-sm font-medium ${
+                  pathname === "/subscriptions"
+                    ? "bg-blue-500 text-white"
+                    : "text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                }`}
+              >
+                My Donations
+              </Link>
             </div>
           </div>
           <div className="flex items-center space-x-4">

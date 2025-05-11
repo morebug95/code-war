@@ -6,6 +6,11 @@ import { createDonation } from "../redux/transactionSlice";
 import { deductFromBalance } from "../redux/userSlice";
 import { addFunds } from "../redux/peopleSlice";
 import { Person, Milestone } from "../types";
+import RecurringDonationOptions from "./RecurringDonationOptions";
+import {
+  SubscriptionFrequency,
+  createSubscription,
+} from "../redux/subscriptionSlice";
 
 interface DonationModalProps {
   person: Person;
@@ -30,6 +35,8 @@ export default function DonationModal({
     []
   );
   const [selectedMilestone, setSelectedMilestone] = useState<string>("general");
+  const [recurringFrequency, setRecurringFrequency] =
+    useState<SubscriptionFrequency | null>(null);
 
   if (!isOpen) return null;
 
@@ -113,6 +120,10 @@ export default function DonationModal({
     }
   };
 
+  const handleFrequencyChange = (frequency: SubscriptionFrequency | null) => {
+    setRecurringFrequency(frequency);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -162,6 +173,21 @@ export default function DonationModal({
           selectedMilestone !== "general" ? selectedMilestone : undefined,
       })
     );
+
+    // Create subscription if recurring donation
+    if (recurringFrequency) {
+      dispatch(
+        createSubscription({
+          personId: person.id,
+          personName: person.name,
+          amount,
+          frequency: recurringFrequency,
+          description: finalDescription,
+          targetMilestone:
+            selectedMilestone !== "general" ? selectedMilestone : undefined,
+        })
+      );
+    }
 
     // Show celebration if milestones are reached
     if (potentialMilestones.length > 0) {
@@ -408,6 +434,12 @@ export default function DonationModal({
               </p>
             </div>
 
+            {/* Recurring Donation Options */}
+            <RecurringDonationOptions
+              selectedFrequency={recurringFrequency}
+              onSelect={handleFrequencyChange}
+            />
+
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Description
@@ -438,7 +470,7 @@ export default function DonationModal({
                 type="submit"
                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
               >
-                Donate
+                {recurringFrequency ? "Set Up Recurring Donation" : "Donate"}
               </button>
             </div>
           </form>
