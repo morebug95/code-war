@@ -2,7 +2,7 @@
 
 import { useAppSelector, useAppDispatch } from "../redux/hooks";
 import { useState } from "react";
-import { Block, Transaction, mineBlock } from "../redux/transactionSlice";
+import { Transaction, mineBlock } from "../redux/transactionSlice";
 import VerificationProofModal from "./VerificationProofModal";
 import Link from "next/link";
 
@@ -11,7 +11,6 @@ export default function BlockchainExplorer() {
   const { blocks, transactions, pendingTransactions } = useAppSelector(
     (state) => state.transactions
   );
-  const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
@@ -24,12 +23,6 @@ export default function BlockchainExplorer() {
   // Format hash for display (truncate)
   const formatHash = (hash: string): string => {
     return `${hash.substring(0, 6)}...${hash.substring(hash.length - 4)}`;
-  };
-
-  // Handle block selection
-  const handleBlockClick = (block: Block) => {
-    setSelectedBlock(block);
-    setSelectedTransaction(null);
   };
 
   // Handle transaction selection
@@ -53,6 +46,9 @@ export default function BlockchainExplorer() {
   const handleCloseVerificationModal = () => {
     setShowVerificationModal(false);
   };
+
+  // Get all confirmed transactions from blocks
+  const confirmedTransactions = blocks.flatMap((block) => block.transactions);
 
   return (
     <div className="w-full max-w-6xl mx-auto">
@@ -80,105 +76,56 @@ export default function BlockchainExplorer() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Blocks column */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Completed Transactions */}
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-          <h2 className="text-lg font-medium mb-4">Blocks</h2>
-          <div className="space-y-2 max-h-96 overflow-y-auto">
-            {blocks.map((block) => (
-              <div
-                key={block.hash}
-                className={`p-3 rounded cursor-pointer transition-colors ${
-                  selectedBlock?.hash === block.hash
-                    ? "bg-blue-100 dark:bg-blue-900"
-                    : "bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
-                }`}
-                onClick={() => handleBlockClick(block)}
-              >
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">
-                    Block #{block.blockNumber}
-                  </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {formatDate(block.timestamp)}
-                  </span>
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Hash: {formatHash(block.hash)}
-                </div>
-                <div className="text-xs mt-1">
-                  Transactions: {block.transactions.length}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Block details column */}
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-          <h2 className="text-lg font-medium mb-4">Block Details</h2>
-          {selectedBlock ? (
-            <div>
-              <div className="mb-3">
-                <span className="text-gray-500 dark:text-gray-400 text-sm">
-                  Block Number:
-                </span>
-                <p className="font-medium">{selectedBlock.blockNumber}</p>
-              </div>
-              <div className="mb-3">
-                <span className="text-gray-500 dark:text-gray-400 text-sm">
-                  Timestamp:
-                </span>
-                <p className="font-medium">
-                  {formatDate(selectedBlock.timestamp)}
-                </p>
-              </div>
-              <div className="mb-3">
-                <span className="text-gray-500 dark:text-gray-400 text-sm">
-                  Hash:
-                </span>
-                <p className="font-mono text-xs break-all">
-                  {selectedBlock.hash}
-                </p>
-              </div>
-              <div className="mb-3">
-                <span className="text-gray-500 dark:text-gray-400 text-sm">
-                  Previous Block Hash:
-                </span>
-                <p className="font-mono text-xs break-all">
-                  {selectedBlock.previousBlockHash}
-                </p>
-              </div>
-              <div className="mb-3">
-                <span className="text-gray-500 dark:text-gray-400 text-sm">
-                  Nonce:
-                </span>
-                <p className="font-medium">{selectedBlock.nonce}</p>
-              </div>
-              <div className="mb-3">
-                <span className="text-gray-500 dark:text-gray-400 text-sm">
-                  Transactions:
-                </span>
-                <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
-                  {selectedBlock.transactions.length > 0 ? (
-                    selectedBlock.transactions.map((tx) => (
-                      <div
-                        key={tx.id}
-                        className={`p-2 rounded-md text-xs cursor-pointer ${
-                          selectedTransaction?.id === tx.id
-                            ? "bg-blue-100 dark:bg-blue-900"
-                            : "bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
-                        }`}
-                        onClick={() => handleTransactionClick(tx)}
-                      >
-                        <div className="flex justify-between">
-                          <span>ID: {tx.id.substring(0, 8)}...</span>
-                          <span>${tx.amount}</span>
-                        </div>
-                        {tx.verificationProof?.isVerified && (
-                          <div className="mt-1 text-green-600 dark:text-green-400 text-xs flex items-center">
+          <h2 className="text-lg font-medium mb-4">Completed Transactions</h2>
+          <div className="overflow-x-auto">
+            {confirmedTransactions.length > 0 ? (
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-900">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      ID
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      From
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      To
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Verified
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  {confirmedTransactions.map((tx) => (
+                    <tr
+                      key={tx.id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                      onClick={() => handleTransactionClick(tx)}
+                    >
+                      <td className="px-4 py-3 whitespace-nowrap text-sm">
+                        {formatHash(tx.id)}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm">
+                        {tx.sender}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm">
+                        {tx.recipient}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                        ${tx.amount}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm">
+                        {tx.verificationProof?.isVerified ? (
+                          <span className="text-green-600 dark:text-green-400 flex items-center">
                             <svg
-                              className="w-3 h-3 mr-1"
+                              className="w-4 h-4 mr-1"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -191,24 +138,24 @@ export default function BlockchainExplorer() {
                                 d="M5 13l4 4L19 7"
                               ></path>
                             </svg>
-                            Verified
-                          </div>
+                            Yes
+                          </span>
+                        ) : (
+                          <span className="text-yellow-600 dark:text-yellow-400">
+                            No
+                          </span>
                         )}
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">
-                      No transactions in this block
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <p className="text-gray-500 dark:text-gray-400 text-center">
-              Select a block to view details
-            </p>
-          )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400">
+                No completed transactions
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Transaction details column */}
